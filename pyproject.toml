@@ -1,15 +1,19 @@
 [tool.poetry]
-name = "gcp-fastapi-poetry"
+name = "resize-image"
 version = "0.1.0"
 description = ""
 authors = []
 
 [tool.poetry.dependencies]
-python = "^3.9"
-fastapi = "^0.71.0"
+python = ">=3.10.7,<3.11"
+fastapi = ">=0.87.0,<0.88.0"
 fastapi-camelcase = "^1.0.5"
-uvicorn = "^0.16.0"
+uvicorn = ">=0.20.0,<0.21.0"
 google-cloud-logging = "^3.2.5"
+Pillow = "^9.3.0"
+python-multipart = "^0.0.5"
+aiofiles = "^22.1.0"
+rembg = "^2.0.30"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -42,17 +46,17 @@ test.sequence = ["unit", "integration"]
 
 [tool.poe.tasks.unit]
 sequence = [
-    {cmd = "pytest -vv --cov-report xml --cov-report term --cov=gcp_fastapi_poetry tests/unit"},
+    {cmd = "pytest -vv --cov-report xml --cov-report term --cov=resize_image tests/unit"},
 ]
 
 [tool.poe.tasks.integration]
 sequence = [
-    {shell = "pytest -vv --cov-append --cov-report xml --cov-report term --cov=gcp_fastapi_poetry tests/integration"},
+    {shell = "pytest -vv --cov-append --cov-report xml --cov-report term --cov=resize_image tests/integration"},
 ]
 
 [tool.poe.tasks.local-server]
 sequence = [
-    {shell = "uvicorn gcp_fastapi_poetry.api:app --reload --port 8011"},
+    {shell = "uvicorn resize_image.api:app --reload --port 8011"},
 ]
 
 [build-system]
