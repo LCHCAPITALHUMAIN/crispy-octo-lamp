@@ -1,4 +1,3 @@
-# https://www.mktr.ai/the-data-scientists-quick-guide-to-dockerfiles-with-examples/
 
 ###############################################
 # Base Image
@@ -27,8 +26,12 @@ RUN curl -sSL https://install.python-poetry.org | python
 
 WORKDIR $PYSETUP_PATH
 COPY ./ ./
-
+# If on cloud run uncomment to use tmp file storage
+# RUN --mount=type=tmpfs,target=/tmp
+# RUN chmod -R ### /tmp/folder
 # install runtime deps - uses $POETRY_VIRTUALENVS_IN_PROJECT internally
 RUN poetry install --no-dev
 
-CMD ["uvicorn", "resize_image.api:app", "--host", "0.0.0.0", "--port", "8080"]
+#CMD ["uvicorn", "resize_image.api:app", "--host", "0.0.0.0", "--port", "8080"]
+#gunicorn --bind 0.0.0.0:5000 main:app -k uvicorn.workers.UvicornWorker
+CMD gunicorn --bind 0.0.0.0:8080 resize_image.api:app -k uvicorn.workers.UvicornWorker

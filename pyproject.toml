@@ -14,6 +14,9 @@ Pillow = "^9.3.0"
 python-multipart = "^0.0.5"
 aiofiles = "^22.1.0"
 rembg = "^2.0.30"
+orjson = "^3.8.3"
+gunicorn = "^20.1.0"
+Jinja2 = "^3.1.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -58,7 +61,10 @@ sequence = [
 sequence = [
     {shell = "uvicorn resize_image.api:app --reload --port 8011"},
 ]
-
+[tool.poe.tasks.local-server-gunicorn]
+sequence = [
+    {shell = "gunicorn --bind 0.0.0.0:8011 resize_image.api:app -k uvicorn.workers.UvicornWorker"},
+]
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

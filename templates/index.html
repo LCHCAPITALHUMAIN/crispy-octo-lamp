@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head lang="en">
+<meta charset="utf-8">
+<title>Image Remove Background Demo</title>
+ 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function (e) {
+    
+ $("#form").on('submit',(function(e) {
+  e.preventDefault();
+  $.ajax({
+         url: "/image/remove_bg",
+   type: "POST",
+   data:  new FormData(this),
+   contentType: false,
+         cache: false,
+   processData:false,
+   beforeSend : function()
+   {
+    //$("#preview").fadeOut();
+    $('#err').text('loading...');
+    $("#err").fadeIn();
+   },
+   success: function(data)
+      {
+    if(data=='invalid')
+    {
+     // invalid file format.
+     $("#err").html("Invalid File !").fadeIn();
+    }
+    else
+    {
+     // view uploaded file.
+     //$("#rmbg").attr('src', 'data:image/jpeg;base64,' +data);
+     displayNoCanvas("#rmbg", data.image);
+     // displayWithCanvas("#preview", data.image)
+     $("#form")[0].reset(); 
+     $("#err").fadeOut();
+    }
+      },
+     error: function(e) 
+      {
+    $("#err").html(e).fadeIn();
+      }          
+    });
+ }));
+});
+
+function displayNoCanvas( imgObj, data ){
+  $(imgObj).attr('src', 'data:image/jpeg;base64,' +data);
+}
+
+/* Display and Encode using "canvas" */
+function displayWithCanvas ( targetDiv, data ){
+  var img = new Image();
+  img.onload = function(){
+    var canvas1 = document.createElement("canvas");
+    canvas1.width = this.width;
+    canvas1.height = this.height;
+    var ctx = canvas1.getContext('2d');
+    ctx.drawImage(this, 0, 0);
+    var dataUrl = canvas1.toDataURL({format: "png"});
+  }
+  img.src = 'data:image/jpeg;base64,' + data;
+  $(targetDiv).append(img);
+} 
+</script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+</head>
+<body>
+<div class="container">
+<div class="row">
+
+<div class="col-md-8">
+
+<h1><a href="#" target="_blank">Uploading Image Remove Background Demo</a></h1>
+<hr> 
+
+<form id="form">
+
+
+<input id="uploadImage" type="file" accept="image/*" name="image" />
+
+<input class="btn btn-success" type="submit" value="Upload">
+</form>
+<div id="preview"><img id="rmbg" src="" /></div><br>
+<div id="err"></div>
+<hr>
+</div>
+</div>
+</div></body></html>

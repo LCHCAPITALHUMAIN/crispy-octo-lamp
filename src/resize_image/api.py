@@ -1,19 +1,22 @@
 import logging
 import os
 
-from fastapi import FastAPI, UploadFile, File, BackgroundTasks
+import base64
+
+from fastapi import FastAPI, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import ORJSONResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 from resize_image.types import ExampleResponse
-from resize_image.helpers import handle_file_upload
-import io
-import base64
-# from fastapi.responses import StreamingResponse
-from starlette.responses import StreamingResponse
+from resize_image.helpers import handle_file_upload, remove_background
+
+
 from os import getcwd
-from PIL import Image
-from rembg import remove
+
+
+templates = Jinja2Templates(directory="templates")
+
 BASEDIR = os.path.dirname(__file__)
 
 if os.environ.get("K_SERVICE"):
@@ -27,7 +30,25 @@ logger = logging.getLogger(__name__)
 
 PATH_FILES = getcwd() + "/"
 
-app = FastAPI()
+description = """
+Image Remove Background API
+## Users
+You will be able to:
+* **Upload an image and get back a 320 X 320 image without the background** 
+"""
+
+app = FastAPI(
+    title="RemoveBackground",
+    description=description,
+    version="0.0.1",
+    contact={
+        "name": "Daniel VALIDE",
+    },
+    license_info={
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+    },
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,81 +58,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-"""
-@app.get("/example/{exampleValue}", response_model=ExampleResponse)
-async def say_hello(exampleValue: str):
-    logger.info(f"GET /example/{exampleValue}")
-    return ExampleResponse(response_value=exampleValue.upper())
 
-@app.get("/image/{rembg_id}")
-async def rembgshow(rembg_id:str,
-  response_description="Returns a thumbnail image from a larger image",
-  response_class="StreamingResponse",
-  responses= {200: {"description": "an image", "content": {"image/png": {}}}}):
-    input = Image.open(PATH_FILES + rembg_id, mode="r")
-    output = remove(input)
-    imgio = io.BytesIO()
-    output.save(imgio, 'PNG')
-    imgio.seek(0)
-    return StreamingResponse(content=imgio, media_type="image/png")
-    
-# RESIZE IMAGES FOR DIFFERENT DEVICES
-def resize_image(filename: str):
-    sizes = [{
-        "width": 320,
-        "height": 320
-    }]
-    for size in sizes:
-            size_defined = size['width'], size['height']
-            image = Image.open(PATH_FILES + filename, mode="r")
-            image.thumbnail(size_defined)
-            output = remove(image)
-            imgio = io.BytesIO()
-            output.save(imgio, 'JPEG')
-            imgio.seek(0)
-            return StreamingResponse(content=imgio, media_type="image/jpeg")
-            # output.save(PATH_FILES + str(size['height']) + "_" + filename)
-
-            print("success")
-
-
-@app.post("/upload/file")
-async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
-    # SAVE FILE ORIGINAL
-    with open(PATH_FILES + file.filename, "wb") as myfile:
-            content = await file.read()
-            myfile.write(content)
-            myfile.close()
-    # RESIZE IMAGES
-    background_tasks.add_task(resize_image, filename=file.filename)
-    return JSONResponse(content={"message": "success"})
-
-"""
-@app.post(
-    "/image/remove_bg",
-    tags=["upload and remove bg"],
-    description="Upload, remove BG, return PNG",
-    response_description="Returns a 320*320 image without background",
-    response_class="StreamingResponse",
-    responses= {200: {"description": "an image", "content": {"image/png": {}}}}
+@app.post("/image/remove_bg",
+        tags=["Upload Resize Remove Background"],
+        description="Upload Resize Remove Background return PNG",
+        response_description="Returns a base64 image data",
+        response_class=ORJSONResponse,
+        responses={200: {"description": "an base 64 encoded image", "content": {"application/json": {}}}}
 )
 async def upload_remove_bg(
-                         image: UploadFile = File(...)
-                         ):
-    img_dir = os.path.join(BASEDIR, 'statics/media/')                    
-    image_, thumb_image = await handle_file_upload(image)
-    input = Image.open(os.path.join(img_dir, thumb_image), mode="r")
-    output = remove(input)
-    imgio = io.BytesIO()
-    output.save(imgio, 'PNG')
-    imgio.seek(0)
-    # print(base64.b64encode(imgio.read()).decode("utf-8"))
-    # base64.b64encode(requests.get(url).content)
-    # return StreamingResponse(content=imgio, media_type="image/png")
-    payload = {
-       "mime" : "image/png",
-       "image": base64.b64encode(imgio.read()).decode("utf-8"),
-       "success": True
-    }
-    return JSONResponse(content=payload)   
+    image: UploadFile | None = None
+):
+    if not image:
+        payload = {
+            "mime": "image/png",
+            "image": "",
+            "success": False
+        }
+    else:
+        img_dir, thumb_image = await handle_file_upload(image)
+        base64_image = await remove_background(img_dir, thumb_image)
 
+        payload = {
+            "mime": "image/png",
+            "image": base64.b64encode(base64_image.read()).decode("utf-8"),
+            "success": True
+        }
+    return ORJSONResponse(content=payload)
+
+# STEP 1 - HOMEPAGE DISPLAY ALL DATA FUNCTION - WORKING
+@app.get("/", response_class=HTMLResponse)
+def read_notes(request: Request, skip: int = 0, limit: int = 100):
+    notes = []
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "notes": notes,
+    })
+    
