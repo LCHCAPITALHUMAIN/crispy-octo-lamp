@@ -2,9 +2,9 @@ node_modules
 .serverless
 
 .vscode/
-
+.history
 .dev.env
-
+.lh
 *.DS_Store
 
 .history

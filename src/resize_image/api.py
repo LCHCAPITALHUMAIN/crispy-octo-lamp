@@ -59,22 +59,22 @@ app.add_middleware(
 )
 
 
-@app.post("/image/remove_bg",
-        tags=["Upload Resize Remove Background"],
-        description="Upload Resize Remove Background return PNG",
-        response_description="Returns a base64 image data",
-        response_class=ORJSONResponse,
-        responses={200: {"description": "an base 64 encoded image", "content": {"application/json": {}}}}
-)
-async def upload_remove_bg(
-    image: UploadFile | None = None
-):
-    if not image:
-        payload = {
-            "mime": "image/png",
-            "image": "",
-            "success": False
+@app.post(
+    "/image/remove_bg",
+    tags=["Upload Resize Remove Background"],
+    description="Upload Resize Remove Background return PNG",
+    response_description="Returns a base64 image data",
+    response_class=ORJSONResponse,
+    responses={
+        200: {
+            "description": "an base 64 encoded image",
+            "content": {"application/json": {}},
         }
+    },
+)
+async def upload_remove_bg(image: UploadFile | None = None):
+    if not image:
+        payload = {"mime": "image/png", "image": "", "success": False}
     else:
         img_dir, thumb_image = await handle_file_upload(image)
         base64_image = await remove_background(img_dir, thumb_image)
@@ -82,16 +82,21 @@ async def upload_remove_bg(
         payload = {
             "mime": "image/png",
             "image": base64.b64encode(base64_image.read()).decode("utf-8"),
-            "success": True
+            "success": True,
         }
     return ORJSONResponse(content=payload)
 
+
 # STEP 1 - HOMEPAGE DISPLAY ALL DATA FUNCTION - WORKING
+
+
 @app.get("/", response_class=HTMLResponse)
 def read_notes(request: Request, skip: int = 0, limit: int = 100):
     notes = []
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "notes": notes,
-    })
-    
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "notes": notes,
+        },
+    )
