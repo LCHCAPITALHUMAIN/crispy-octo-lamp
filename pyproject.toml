@@ -70,5 +70,5 @@ sequence = [
     {shell = "gunicorn --bind 0.0.0.0:8011 resize_image.api:app -k uvicorn.workers.UvicornWorker"},
 ]
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["setuptools", "poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

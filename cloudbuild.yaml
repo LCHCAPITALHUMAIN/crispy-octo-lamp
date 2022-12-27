@@ -22,7 +22,7 @@ steps:
         run deploy ${TAG_NAME}-resize-image
         --cpu 1
         --memory 256M
-        --max-instances 5
+        --max-instances 1
         --image gcr.io/$PROJECT_ID/resize-image:${TAG_NAME}
         --region europe-west1
         --platform managed
